@@ -3,23 +3,59 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Lovable App</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
-
-    <!-- TODO: Update og:title to match your application name -->
-    <meta property="og:title" content="Lovable App" />
-    <meta property="og:description" content="Lovable Generated Project" />
+    <title>PaszczureQ — Digital Creator & Developer</title>
+    <meta name="description" content="Building immersive digital experiences, Roblox games, and brands. Explore the portfolio of PaszczureQ." />
+    <meta name="author" content="PaszczureQ" />
+    <meta property="og:title" content="PaszczureQ — Digital Creator" />
+    <meta property="og:description" content="Building immersive digital experiences, Roblox games, and brands." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <style>
+      /* Loading screen */
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: #0A0A0A;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+      }
+      #loading-screen.hide {
+        opacity: 0;
+        visibility: hidden;
+      }
+      .loader-line {
+        width: 120px;
+        height: 2px;
+        background: #1a1a1a;
+        border-radius: 2px;
+        overflow: hidden;
+        position: relative;
+      }
+      .loader-line::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 40%;
+        background: #B30000;
+        border-radius: 2px;
+        animation: loaderSlide 1s ease-in-out infinite;
+        box-shadow: 0 0 12px rgba(179,0,0,0.6);
+      }
+      @keyframes loaderSlide {
+        0% { left: -40%; }
+        100% { left: 100%; }
+      }
+    </style>
   </head>
-
   <body>
+    <div id="loading-screen">
+      <div class="loader-line"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

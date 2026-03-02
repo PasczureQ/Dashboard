@@ -42,24 +42,33 @@ const Socials = () => {
               <div className="red-dot" />
               <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Connect</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">Socials</h1>
+            <h1 className="text-4xl md:text-6xl font-display font-bold mb-4">Socials</h1>
             <p className="text-muted-foreground">Find me across the internet.</p>
           </div>
 
           {loading ? (
             <div className="text-center text-muted-foreground">Loading...</div>
           ) : (
-            <div className="flex flex-wrap justify-center gap-8 max-w-2xl mx-auto">
+            <div className="flex flex-wrap justify-center gap-8 max-w-3xl mx-auto">
               {socials.map((social) =>
                 social.enabled && social.url ? (
-                  <a key={social.id} href={social.url} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-3 p-8 bg-card border border-border rounded-xl card-hover hover-glow group w-44">
-                    <div className="text-muted-foreground group-hover:text-primary transition-colors duration-300">
+                  <a
+                    key={social.id}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-4 p-10 glass rounded-2xl card-hover hover-glow group w-48"
+                  >
+                    <div className="text-muted-foreground group-hover:text-primary transition-all duration-300 group-hover:scale-110">
                       {socialIcons[social.platform] || <div className="w-10 h-10 rounded bg-secondary" />}
                     </div>
                     <span className="font-display font-semibold group-hover:text-primary transition-colors">{social.platform}</span>
                   </a>
                 ) : (
-                  <div key={social.id} className="flex flex-col items-center gap-3 p-8 bg-card/50 border border-border/50 rounded-xl opacity-40 cursor-not-allowed w-44">
+                  <div
+                    key={social.id}
+                    className="flex flex-col items-center gap-4 p-10 bg-card/30 border border-border/30 rounded-2xl opacity-30 cursor-not-allowed w-48"
+                  >
                     <div className="text-muted-foreground">{socialIcons[social.platform] || <div className="w-10 h-10 rounded bg-secondary" />}</div>
                     <span className="font-display font-semibold text-muted-foreground">{social.platform}</span>
                     <span className="text-xs text-muted-foreground">Coming soon</span>
