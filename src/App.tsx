@@ -6,11 +6,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Layout from "./components/Layout";
 import AdminLayout from "./components/AdminLayout";
-import Dashboard from "./pages/Dashboard";
-import Projects from "./pages/Projects";
-import Staff from "./pages/Staff";
-import Contact from "./pages/Contact";
-import Socials from "./pages/Socials";
+import Home from "./pages/Home";
+import StudioProjects from "./pages/StudioProjects";
+import Ventures from "./pages/Ventures";
+import VentureDetail from "./pages/VentureDetail";
+import Team from "./pages/Team";
+import Connect from "./pages/Connect";
+import Network from "./pages/Network";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProjects from "./pages/admin/AdminProjects";
@@ -30,16 +32,20 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public pages */}
-            <Route element={<Layout><Routes><Route path="*" element={null} /></Routes></Layout>}>
-            </Route>
-            <Route path="/" element={<Layout><Dashboard /></Layout>} />
-            <Route path="/projects" element={<Layout><Projects /></Layout>} />
-            <Route path="/staff" element={<Layout><Staff /></Layout>} />
-            <Route path="/contact" element={<Layout><Contact /></Layout>} />
-            <Route path="/socials" element={<Layout><Socials /></Layout>} />
+            <Route path="/" element={<Layout><Home /></Layout>} />
+            <Route path="/studio-projects" element={<Layout><StudioProjects /></Layout>} />
+            <Route path="/ventures" element={<Layout><Ventures /></Layout>} />
+            <Route path="/ventures/:id" element={<Layout><VentureDetail /></Layout>} />
+            <Route path="/team" element={<Layout><Team /></Layout>} />
+            <Route path="/connect" element={<Layout><Connect /></Layout>} />
+            <Route path="/network" element={<Layout><Network /></Layout>} />
 
-            {/* Admin */}
+            {/* Admin - multiple secret routes */}
             <Route path="/admin" element={<Layout><AdminLogin /></Layout>} />
+            <Route path="/studio-access" element={<Layout><AdminLogin /></Layout>} />
+            <Route path="/control-center" element={<Layout><AdminLogin /></Layout>} />
+            <Route path="/root" element={<Layout><AdminLogin /></Layout>} />
+
             <Route element={<Layout><AdminLayout /></Layout>}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/projects" element={<AdminProjects />} />

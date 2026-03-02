@@ -3,7 +3,7 @@ import { MessageSquare, Send, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-const Contact = () => {
+const Connect = () => {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -32,10 +32,10 @@ const Contact = () => {
         <div className="container mx-auto px-4 max-w-2xl">
           <div className="flex items-center gap-3 mb-2">
             <div className="red-dot" />
-            <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Reach Out</span>
+            <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Get in Touch</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-display font-bold mb-4">Let's Connect</h1>
-          <p className="text-muted-foreground mb-12">Best way to reach me is via Discord.</p>
+          <h1 className="text-4xl md:text-6xl font-display font-bold mb-4">Let's Build Something.</h1>
+          <p className="text-muted-foreground mb-12">Have an idea? Want to collaborate? Reach out.</p>
 
           <div className="glass rounded-xl p-6 mb-12 card-hover">
             <div className="flex items-center gap-4">
@@ -83,4 +83,4 @@ const Contact = () => {
   );
 };
 
-export default Contact;
+export default Connect;

@@ -22,7 +22,7 @@ const socialIcons: Record<string, JSX.Element> = {
   ),
 };
 
-const Socials = () => {
+const Network = () => {
   const [socials, setSocials] = useState<Social[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,10 +40,10 @@ const Socials = () => {
           <div className="text-center mb-16">
             <div className="flex items-center justify-center gap-3 mb-2">
               <div className="red-dot" />
-              <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Connect</span>
+              <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Stay Connected</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-display font-bold mb-4">Socials</h1>
-            <p className="text-muted-foreground">Find me across the internet.</p>
+            <h1 className="text-4xl md:text-6xl font-display font-bold mb-4">Network</h1>
+            <p className="text-muted-foreground">Find us across the internet.</p>
           </div>
 
           {loading ? (
@@ -83,4 +83,4 @@ const Socials = () => {
   );
 };
 
-export default Socials;
+export default Network;

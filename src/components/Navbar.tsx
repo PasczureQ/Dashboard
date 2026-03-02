@@ -1,17 +1,19 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 const navItems = [
-  { label: "Dashboard", path: "/" },
-  { label: "Projects", path: "/projects" },
-  { label: "Staff", path: "/staff" },
-  { label: "Contact", path: "/contact" },
-  { label: "Socials", path: "/socials" },
+  { label: "Home", path: "/" },
+  { label: "Studio Projects", path: "/studio-projects" },
+  { label: "Ventures", path: "/ventures" },
+  { label: "Team", path: "/team" },
+  { label: "Connect", path: "/connect" },
+  { label: "Network", path: "/network" },
 ];
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -20,6 +22,18 @@ const Navbar = () => {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Secret admin shortcut: Ctrl+Shift+A
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === "A") {
+        e.preventDefault();
+        navigate("/admin");
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [navigate]);
 
   return (
     <nav

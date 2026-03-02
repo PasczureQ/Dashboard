@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Zap, Rocket, Users, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -38,68 +38,78 @@ const AnimatedNumber = ({ target }: { target: number }) => {
   return <span ref={ref}>{value}</span>;
 };
 
-const Dashboard = () => {
+const Home = () => {
   const [featured, setFeatured] = useState<Project | null>(null);
-  const [counts, setCounts] = useState({ projects: 0, active: 0, brands: 0 });
+  const [counts, setCounts] = useState({ projects: 0, active: 0, ventures: 0, team: 0 });
   const scrollRef = useScrollFadeIn();
 
   useEffect(() => {
     const load = async () => {
-      const [fp, pc, ac, bc] = await Promise.all([
-        supabase.from("projects").select("*").in("status", ["released", "out"]).order("created_at", { ascending: false }).limit(1),
-        supabase.from("projects").select("id", { count: "exact", head: true }),
-        supabase.from("projects").select("id", { count: "exact", head: true }).in("status", ["released", "out"]),
+      const [fp, pc, ac, vc, tc] = await Promise.all([
+        supabase.from("projects").select("*").eq("category", "roblox").in("status", ["live", "released"]).order("created_at", { ascending: false }).limit(1),
+        supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand"),
+        supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand").in("status", ["live", "released", "in_development"]),
         supabase.from("projects").select("id", { count: "exact", head: true }).eq("category", "brand"),
+        supabase.from("staff").select("id", { count: "exact", head: true }),
       ]);
       setFeatured(fp.data?.[0] ?? null);
-      setCounts({ projects: pc.count ?? 0, active: ac.count ?? 0, brands: bc.count ?? 0 });
+      setCounts({
+        projects: pc.count ?? 0,
+        active: ac.count ?? 0,
+        ventures: vc.count ?? 0,
+        team: tc.count ?? 0,
+      });
     };
     load();
   }, []);
+
+  const stats = [
+    { value: counts.projects, label: "Total Projects", icon: Rocket },
+    { value: counts.active, label: "Active Builds", icon: Zap },
+    { value: counts.ventures, label: "Ventures", icon: Briefcase },
+    { value: counts.team, label: "Team Members", icon: Users },
+  ];
 
   return (
     <div className="page-transition" ref={scrollRef}>
       {/* Hero */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
-        {/* Background effects */}
         <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/4 blur-[160px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] rounded-full bg-primary/3 blur-[120px] pointer-events-none" />
         <div className="absolute top-24 right-32 w-1.5 h-1.5 rounded-full bg-primary animate-pulse-glow" />
         <div className="absolute bottom-32 left-24 w-1 h-1 rounded-full bg-primary/60 animate-pulse-glow" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 right-16 w-1 h-1 rounded-full bg-primary/40 animate-pulse-glow" style={{ animationDelay: "2s" }} />
 
         <div className="container mx-auto px-4">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
               <div className="red-dot" />
-              <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Creator & Developer</span>
+              <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Digital Studio</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.05] mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              Building digital
+              Engineering digital
               <br />
               <span className="text-primary glow-red-text">experiences</span>
             </h1>
 
-            {/* Animated red accent line */}
             <div className="w-24 h-0.5 bg-primary mb-8 opacity-0 animate-fade-in rounded-full shadow-[0_0_12px_hsl(0_100%_36%/0.4)]" style={{ animationDelay: "0.3s" }} />
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl mb-10 opacity-0 animate-fade-in leading-relaxed" style={{ animationDelay: "0.35s" }}>
-              I create immersive Roblox games, build brands, and craft digital experiences that push boundaries. Welcome to my world.
+              Building immersive game experiences, launching ventures, and engineering digital products that push the boundaries of what's possible.
             </p>
 
             <div className="flex flex-wrap gap-4 opacity-0 animate-fade-in" style={{ animationDelay: "0.5s" }}>
               <Link
-                to="/projects"
+                to="/studio-projects"
                 className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-semibold rounded-md hover-glow hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02]"
               >
-                View Projects <ArrowRight size={18} />
+                Explore Projects <ArrowRight size={18} />
               </Link>
               <Link
-                to="/contact"
+                to="/ventures"
                 className="inline-flex items-center gap-2 px-7 py-3.5 border border-border text-foreground font-semibold rounded-md hover:bg-secondary hover:border-primary/20 transition-all duration-300"
               >
-                Get in Touch
+                Enter Studio
               </Link>
             </div>
           </div>
@@ -108,13 +118,17 @@ const Dashboard = () => {
 
       <div className="red-line" />
 
-      {/* About short */}
+      {/* Studio Overview */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center fade-up">
-            <h2 className="text-2xl md:text-3xl font-display font-bold mb-4">About Me</h2>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="red-dot" />
+              <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Studio Overview</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-display font-bold mb-4">What We Build</h2>
             <p className="text-muted-foreground leading-relaxed">
-              I'm a passionate digital creator focused on building engaging Roblox experiences and launching innovative brands. I combine creativity with technical expertise to deliver premium digital products.
+              A digital studio focused on crafting immersive Roblox experiences, launching product brands, and building scalable digital ecosystems. Every project is engineered with precision and purpose.
             </p>
           </div>
         </div>
@@ -122,13 +136,13 @@ const Dashboard = () => {
 
       <div className="red-line" />
 
-      {/* Featured Project */}
+      {/* Featured Release */}
       {featured && (
         <section className="py-24">
           <div className="container mx-auto px-4">
             <div className="flex items-center gap-3 mb-8 fade-up">
               <div className="red-dot" />
-              <h2 className="text-sm font-medium tracking-wider uppercase text-muted-foreground">Featured Project</h2>
+              <h2 className="text-sm font-medium tracking-wider uppercase text-muted-foreground">Featured Release</h2>
             </div>
             <div className="glass rounded-xl p-8 md:p-12 card-hover fade-up">
               <div className="flex flex-col md:flex-row gap-8 items-center">
@@ -140,10 +154,10 @@ const Dashboard = () => {
                   )}
                 </div>
                 <div className="w-full md:w-1/2">
-                  <span className="inline-block px-3 py-1 text-xs font-semibold bg-primary/15 text-primary rounded-full mb-4 capitalize">{featured.status}</span>
+                  <span className="inline-block px-3 py-1 text-xs font-semibold bg-primary/15 text-primary rounded-full mb-4 capitalize">{featured.status === "released" ? "Live" : featured.status}</span>
                   <h3 className="text-2xl md:text-3xl font-display font-bold mb-3">{featured.name}</h3>
                   <p className="text-muted-foreground mb-6 leading-relaxed">{featured.description}</p>
-                  <Link to="/projects" className="inline-flex items-center gap-2 text-primary font-medium hover:underline group">
+                  <Link to="/studio-projects" className="inline-flex items-center gap-2 text-primary font-medium hover:underline group">
                     View all projects <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </div>
@@ -155,16 +169,19 @@ const Dashboard = () => {
 
       <div className="red-line" />
 
-      {/* Stats */}
+      {/* Live Studio Metrics */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-3 gap-8 text-center fade-up">
-            {[
-              { value: counts.projects, label: "Total Projects" },
-              { value: counts.active, label: "Active Projects" },
-              { value: counts.brands, label: "Brands Created" },
-            ].map((stat) => (
-              <div key={stat.label} className="group">
+          <div className="flex items-center justify-center gap-3 mb-12 fade-up">
+            <div className="red-dot" />
+            <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Live Studio Metrics</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 fade-up">
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center group">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+                  <stat.icon size={22} className="text-primary" />
+                </div>
                 <div className="text-3xl md:text-5xl font-display font-bold text-primary mb-2 group-hover:glow-red-text transition-all duration-300">
                   <AnimatedNumber target={stat.value} />
                 </div>
@@ -178,4 +195,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Home;
