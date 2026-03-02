@@ -25,7 +25,7 @@ const Footer = () => {
             <Link to="/" className="font-display text-lg font-bold tracking-tight">
               <span className="text-primary">P</span>aszczureQ
             </Link>
-            <p className="text-xs text-muted-foreground mt-1">Creating digital experiences that push boundaries.</p>
+            <p className="text-xs text-muted-foreground mt-1">Engineering digital experiences that push boundaries.</p>
           </div>
 
           <div className="flex items-center gap-4">

@@ -5,8 +5,8 @@ import { LayoutDashboard, FolderOpen, Users, Share2, Mail, LogOut } from "lucide
 const adminNav = [
   { label: "Overview", path: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Projects", path: "/admin/projects", icon: FolderOpen },
-  { label: "Staff", path: "/admin/staff", icon: Users },
-  { label: "Socials", path: "/admin/socials", icon: Share2 },
+  { label: "Team", path: "/admin/staff", icon: Users },
+  { label: "Network", path: "/admin/socials", icon: Share2 },
   { label: "Messages", path: "/admin/messages", icon: Mail },
 ];
 
@@ -31,7 +31,7 @@ const AdminLayout = () => {
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-card hidden md:flex flex-col fixed top-16 bottom-0">
         <div className="p-4 border-b border-border">
-          <h2 className="font-display font-bold text-primary">Admin Panel</h2>
+          <h2 className="font-display font-bold text-primary">Control Center</h2>
           <p className="text-xs text-muted-foreground mt-1 truncate">{user.email}</p>
         </div>
         <nav className="flex-1 p-3 space-y-1">

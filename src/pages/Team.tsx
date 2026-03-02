@@ -6,7 +6,7 @@ import useScrollFadeIn from "@/hooks/useScrollFadeIn";
 
 type StaffMember = Tables<"staff">;
 
-const Staff = () => {
+const Team = () => {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useScrollFadeIn();
@@ -24,15 +24,15 @@ const Staff = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="red-dot" />
-            <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Team</span>
+            <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Our People</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-display font-bold mb-4">Staff</h1>
-          <p className="text-muted-foreground max-w-lg mb-12">Meet the team behind the projects.</p>
+          <h1 className="text-4xl md:text-6xl font-display font-bold mb-4">Team</h1>
+          <p className="text-muted-foreground max-w-lg mb-12">The people behind the studio.</p>
 
           {loading ? (
             <div className="text-center py-20 text-muted-foreground">Loading...</div>
           ) : staff.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">No staff members yet.</div>
+            <div className="text-center py-20 text-muted-foreground">No team members yet.</div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {staff.map((member) => (
@@ -50,7 +50,6 @@ const Staff = () => {
                         <span className="text-2xl font-display font-bold text-primary">{member.name[0]}</span>
                       </div>
                     )}
-                    {/* Red glow circle on hover */}
                     <div className="absolute -inset-1 rounded-full bg-primary/0 group-hover:bg-primary/5 blur-xl transition-all duration-500 -z-10" />
                   </div>
                   <h3 className="text-xl font-display font-semibold mb-1 group-hover:text-primary transition-colors">{member.name}</h3>
@@ -72,4 +71,4 @@ const Staff = () => {
   );
 };
 
-export default Staff;
+export default Team;
