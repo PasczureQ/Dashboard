@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          entity_name: string | null
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_name?: string | null
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_name?: string | null
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -48,13 +72,16 @@ export type Database = {
           created_at: string
           description: string | null
           display_order: number | null
+          featured: boolean
           game_link: string | null
           id: string
           name: string
           product_images: string[] | null
+          slug: string | null
           status: string
           thumbnail_url: string | null
           updated_at: string
+          views_count: number
         }
         Insert: {
           brand_type?: string | null
@@ -62,13 +89,16 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number | null
+          featured?: boolean
           game_link?: string | null
           id?: string
           name: string
           product_images?: string[] | null
+          slug?: string | null
           status?: string
           thumbnail_url?: string | null
           updated_at?: string
+          views_count?: number
         }
         Update: {
           brand_type?: string | null
@@ -76,13 +106,16 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number | null
+          featured?: boolean
           game_link?: string | null
           id?: string
           name?: string
           product_images?: string[] | null
+          slug?: string | null
           status?: string
           thumbnail_url?: string | null
           updated_at?: string
+          views_count?: number
         }
         Relationships: []
       }
@@ -120,6 +153,7 @@ export type Database = {
           name: string
           profile_picture_url: string | null
           role: string
+          social_links: Json | null
           updated_at: string
         }
         Insert: {
@@ -131,6 +165,7 @@ export type Database = {
           name: string
           profile_picture_url?: string | null
           role: string
+          social_links?: Json | null
           updated_at?: string
         }
         Update: {
@@ -142,6 +177,7 @@ export type Database = {
           name?: string
           profile_picture_url?: string | null
           role?: string
+          social_links?: Json | null
           updated_at?: string
         }
         Relationships: []

@@ -8,6 +8,7 @@ import Layout from "./components/Layout";
 import AdminLayout from "./components/AdminLayout";
 import Home from "./pages/Home";
 import StudioProjects from "./pages/StudioProjects";
+import ProjectDetail from "./pages/ProjectDetail";
 import Ventures from "./pages/Ventures";
 import VentureDetail from "./pages/VentureDetail";
 import Team from "./pages/Team";
@@ -34,6 +35,7 @@ const App = () => (
             {/* Public pages */}
             <Route path="/" element={<Layout><Home /></Layout>} />
             <Route path="/studio-projects" element={<Layout><StudioProjects /></Layout>} />
+            <Route path="/project/:slug" element={<Layout><ProjectDetail /></Layout>} />
             <Route path="/ventures" element={<Layout><Ventures /></Layout>} />
             <Route path="/ventures/:id" element={<Layout><VentureDetail /></Layout>} />
             <Route path="/team" element={<Layout><Team /></Layout>} />

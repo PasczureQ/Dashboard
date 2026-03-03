@@ -38,27 +38,49 @@ const AnimatedNumber = ({ target }: { target: number }) => {
   return <span ref={ref}>{value}</span>;
 };
 
+const SkeletonCard = () => (
+  <div className="glass rounded-xl p-8 md:p-12">
+    <div className="flex flex-col md:flex-row gap-8 items-center">
+      <div className="w-full md:w-1/2 aspect-video skeleton" />
+      <div className="w-full md:w-1/2 space-y-4">
+        <div className="h-6 w-24 skeleton" />
+        <div className="h-8 w-3/4 skeleton" />
+        <div className="h-4 w-full skeleton" />
+        <div className="h-4 w-2/3 skeleton" />
+      </div>
+    </div>
+  </div>
+);
+
 const Home = () => {
   const [featured, setFeatured] = useState<Project | null>(null);
   const [counts, setCounts] = useState({ projects: 0, active: 0, ventures: 0, team: 0 });
+  const [loading, setLoading] = useState(true);
   const scrollRef = useScrollFadeIn();
 
   useEffect(() => {
     const load = async () => {
       const [fp, pc, ac, vc, tc] = await Promise.all([
-        supabase.from("projects").select("*").eq("category", "roblox").in("status", ["live", "released"]).order("created_at", { ascending: false }).limit(1),
+        supabase.from("projects").select("*").eq("featured", true).order("created_at", { ascending: false }).limit(1),
         supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand"),
         supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand").in("status", ["live", "released", "in_development"]),
         supabase.from("projects").select("id", { count: "exact", head: true }).eq("category", "brand"),
         supabase.from("staff").select("id", { count: "exact", head: true }),
       ]);
-      setFeatured(fp.data?.[0] ?? null);
+      // Fallback to latest live project if no featured
+      let featuredProject = fp.data?.[0] ?? null;
+      if (!featuredProject) {
+        const { data } = await supabase.from("projects").select("*").neq("category", "brand").in("status", ["live", "released"]).order("created_at", { ascending: false }).limit(1);
+        featuredProject = data?.[0] ?? null;
+      }
+      setFeatured(featuredProject);
       setCounts({
         projects: pc.count ?? 0,
         active: ac.count ?? 0,
         ventures: vc.count ?? 0,
         team: tc.count ?? 0,
       });
+      setLoading(false);
     };
     load();
   }, []);
@@ -92,7 +114,7 @@ const Home = () => {
               <span className="text-primary glow-red-text">experiences</span>
             </h1>
 
-            <div className="w-24 h-0.5 bg-primary mb-8 opacity-0 animate-fade-in rounded-full shadow-[0_0_12px_hsl(0_100%_36%/0.4)]" style={{ animationDelay: "0.3s" }} />
+            <div className="w-24 h-0.5 bg-gradient-to-r from-primary to-primary/40 mb-8 opacity-0 animate-fade-in rounded-full shadow-[0_0_12px_hsl(0_100%_36%/0.4)]" style={{ animationDelay: "0.3s" }} />
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl mb-10 opacity-0 animate-fade-in leading-relaxed" style={{ animationDelay: "0.35s" }}>
               Building immersive game experiences, launching ventures, and engineering digital products that push the boundaries of what's possible.
@@ -101,13 +123,13 @@ const Home = () => {
             <div className="flex flex-wrap gap-4 opacity-0 animate-fade-in" style={{ animationDelay: "0.5s" }}>
               <Link
                 to="/studio-projects"
-                className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-semibold rounded-md hover-glow hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02]"
+                className="btn-gradient px-7 py-3.5 text-primary-foreground"
               >
                 Explore Projects <ArrowRight size={18} />
               </Link>
               <Link
                 to="/ventures"
-                className="inline-flex items-center gap-2 px-7 py-3.5 border border-border text-foreground font-semibold rounded-md hover:bg-secondary hover:border-primary/20 transition-all duration-300"
+                className="inline-flex items-center gap-2 px-7 py-3.5 border border-border text-foreground font-semibold rounded-lg hover:bg-secondary hover:border-primary/20 transition-all duration-300"
               >
                 Enter Studio
               </Link>
@@ -119,15 +141,15 @@ const Home = () => {
       <div className="red-line" />
 
       {/* Studio Overview */}
-      <section className="py-20">
+      <section className="py-24">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center fade-up">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="red-dot" />
               <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Studio Overview</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-display font-bold mb-4">What We Build</h2>
-            <p className="text-muted-foreground leading-relaxed">
+            <h2 className="text-2xl md:text-4xl font-display font-bold mb-4">What We Build</h2>
+            <p className="text-muted-foreground leading-relaxed text-lg">
               A digital studio focused on crafting immersive Roblox experiences, launching product brands, and building scalable digital ecosystems. Every project is engineered with precision and purpose.
             </p>
           </div>
@@ -137,13 +159,15 @@ const Home = () => {
       <div className="red-line" />
 
       {/* Featured Release */}
-      {featured && (
-        <section className="py-24">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center gap-3 mb-8 fade-up">
-              <div className="red-dot" />
-              <h2 className="text-sm font-medium tracking-wider uppercase text-muted-foreground">Featured Release</h2>
-            </div>
+      <section className="py-24">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-3 mb-8 fade-up">
+            <div className="red-dot" />
+            <h2 className="text-sm font-medium tracking-wider uppercase text-muted-foreground">Featured Release</h2>
+          </div>
+          {loading ? (
+            <SkeletonCard />
+          ) : featured ? (
             <div className="glass rounded-xl p-8 md:p-12 card-hover fade-up">
               <div className="flex flex-col md:flex-row gap-8 items-center">
                 <div className="w-full md:w-1/2 aspect-video rounded-lg bg-secondary overflow-hidden">
@@ -154,31 +178,41 @@ const Home = () => {
                   )}
                 </div>
                 <div className="w-full md:w-1/2">
-                  <span className="inline-block px-3 py-1 text-xs font-semibold bg-primary/15 text-primary rounded-full mb-4 capitalize">{featured.status === "released" ? "Live" : featured.status}</span>
+                  <span className="inline-block px-3 py-1 text-xs font-semibold bg-primary/15 text-primary rounded-full mb-4 capitalize">{featured.status === "released" ? "Live" : featured.status.replace("_", " ")}</span>
                   <h3 className="text-2xl md:text-3xl font-display font-bold mb-3">{featured.name}</h3>
                   <p className="text-muted-foreground mb-6 leading-relaxed">{featured.description}</p>
-                  <Link to="/studio-projects" className="inline-flex items-center gap-2 text-primary font-medium hover:underline group">
-                    View all projects <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                  </Link>
+                  {featured.game_link && (featured.status === "live" || featured.status === "released") ? (
+                    <a href={featured.game_link} target="_blank" rel="noopener noreferrer" className="btn-gradient px-6 py-3 text-sm text-primary-foreground">
+                      Launch Experience <ArrowRight size={16} />
+                    </a>
+                  ) : (
+                    <Link to="/studio-projects" className="inline-flex items-center gap-2 text-primary font-medium hover:underline group">
+                      View all projects <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <div className="glass rounded-xl p-12 text-center fade-up">
+              <p className="text-muted-foreground">No featured project yet.</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       <div className="red-line" />
 
       {/* Live Studio Metrics */}
-      <section className="py-20">
+      <section className="py-24">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-3 mb-12 fade-up">
+          <div className="flex items-center justify-center gap-3 mb-16 fade-up">
             <div className="red-dot" />
             <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Live Studio Metrics</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 fade-up">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 fade-up">
             {stats.map((stat) => (
-              <div key={stat.label} className="text-center group">
+              <div key={stat.label} className="glass rounded-xl p-6 text-center group card-hover">
                 <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
                   <stat.icon size={22} className="text-primary" />
                 </div>

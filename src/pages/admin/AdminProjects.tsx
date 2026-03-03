@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, X, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Upload, Star } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Project = Tables<"projects">;
@@ -16,21 +16,35 @@ const statusesByCategory: Record<string, { value: string; label: string }[]> = {
     { value: "live", label: "Live" },
     { value: "in_development", label: "In Development" },
     { value: "maintenance", label: "Maintenance" },
+    { value: "beta", label: "Beta" },
+    { value: "private", label: "Private" },
+    { value: "archived", label: "Archived" },
   ],
   steam: [
     { value: "live", label: "Live" },
     { value: "in_development", label: "In Development" },
     { value: "maintenance", label: "Maintenance" },
+    { value: "beta", label: "Beta" },
+    { value: "archived", label: "Archived" },
   ],
   brand: [
     { value: "active", label: "Active" },
     { value: "launching_soon", label: "Launching Soon" },
+    { value: "sold_out", label: "Sold Out" },
+    { value: "limited_drop", label: "Limited Drop" },
+    { value: "coming_soon", label: "Coming Soon" },
   ],
+};
+
+const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+const logActivity = async (action: string, entityType: string, entityName?: string) => {
+  await supabase.from("activity_log").insert({ action, entity_type: entityType, entity_name: entityName } as any);
 };
 
 const AdminProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [editing, setEditing] = useState<Partial<Project> | null>(null);
+  const [editing, setEditing] = useState<Partial<Project & { featured?: boolean; slug?: string }> | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchProjects = async () => {
@@ -55,6 +69,7 @@ const AdminProjects = () => {
     const cat = editing.category || "roblox";
     const availableStatuses = statusesByCategory[cat] || statusesByCategory.roblox;
     const validStatus = availableStatuses.find(s => s.value === editing.status)?.value || availableStatuses[0].value;
+    const slug = (editing as any).slug || generateSlug(editing.name);
 
     const payload = {
       name: editing.name,
@@ -66,20 +81,37 @@ const AdminProjects = () => {
       brand_type: editing.brand_type || null,
       product_images: editing.product_images || [],
       display_order: editing.display_order ?? 0,
+      featured: (editing as any).featured ?? false,
+      slug,
     };
 
+    const isNew = !editing.id;
     if (editing.id) {
-      await supabase.from("projects").update(payload).eq("id", editing.id);
+      await supabase.from("projects").update(payload as any).eq("id", editing.id);
+      await logActivity("Updated project", cat, editing.name);
     } else {
-      await supabase.from("projects").insert(payload);
+      await supabase.from("projects").insert(payload as any);
+      await logActivity("Created project", cat, editing.name);
     }
     setEditing(null);
     fetchProjects();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (p: Project) => {
     if (!confirm("Delete this project?")) return;
-    await supabase.from("projects").delete().eq("id", id);
+    await supabase.from("projects").delete().eq("id", p.id);
+    await logActivity("Deleted project", p.category, p.name);
+    fetchProjects();
+  };
+
+  const toggleFeatured = async (p: Project) => {
+    const newVal = !(p as any).featured;
+    // If marking as featured, unfeature all others first
+    if (newVal) {
+      await supabase.from("projects").update({ featured: false } as any).neq("id", p.id);
+    }
+    await supabase.from("projects").update({ featured: newVal } as any).eq("id", p.id);
+    await logActivity(newVal ? "Marked as featured" : "Unfeatured", "project", p.name);
     fetchProjects();
   };
 
@@ -106,7 +138,7 @@ const AdminProjects = () => {
         <h1 className="text-2xl font-display font-bold">Projects & Ventures</h1>
         <button
           onClick={() => setEditing({ category: "roblox", status: "live" })}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover-glow"
+          className="btn-gradient px-4 py-2 text-sm text-primary-foreground"
         >
           <Plus size={16} /> Add Project
         </button>
@@ -122,7 +154,11 @@ const AdminProjects = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Name</label>
-                <input value={editing.name || ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                <input value={editing.name || ""} onChange={(e) => setEditing({ ...editing, name: e.target.value, slug: generateSlug(e.target.value) } as any)} className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Slug</label>
+                <input value={(editing as any).slug || ""} onChange={(e) => setEditing({ ...editing, slug: e.target.value } as any)} className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Category</label>
@@ -136,6 +172,11 @@ const AdminProjects = () => {
                   {availableStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={(editing as any).featured ?? false} onChange={(e) => setEditing({ ...editing, featured: e.target.checked } as any)} className="accent-primary w-4 h-4" />
+                <Star size={14} className="text-primary" />
+                <span className="text-sm font-medium">Featured Project</span>
+              </label>
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">Description</label>
                 <textarea value={editing.description || ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} rows={3} className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/50" />
@@ -175,7 +216,7 @@ const AdminProjects = () => {
                 </div>
               )}
               <div className="flex gap-3 pt-2">
-                <button onClick={handleSave} className="px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover-glow">Save</button>
+                <button onClick={handleSave} className="btn-gradient px-4 py-2 text-sm text-primary-foreground">Save</button>
                 <button onClick={() => setEditing(null)} className="px-4 py-2 bg-secondary text-secondary-foreground text-sm font-medium rounded-md">Cancel</button>
               </div>
             </div>
@@ -185,22 +226,28 @@ const AdminProjects = () => {
 
       <div className="space-y-3">
         {projects.map((p) => (
-          <div key={p.id} className="bg-card border border-border rounded-lg p-4 flex items-center gap-4">
+          <div key={p.id} className="bg-card border border-border rounded-lg p-4 flex items-center gap-4 card-hover">
             {p.thumbnail_url ? (
               <img src={p.thumbnail_url} alt="" className="w-16 h-12 rounded object-cover" />
             ) : (
               <div className="w-16 h-12 rounded bg-secondary" />
             )}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold truncate">{p.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold truncate">{p.name}</h3>
+                {(p as any).featured && <Star size={14} className="text-primary fill-primary flex-shrink-0" />}
+              </div>
               <div className="flex gap-2 mt-1">
                 <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground capitalize">{categories.find(c => c.value === p.category)?.label || p.category}</span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary capitalize">{p.status.replace("_", " ")}</span>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1">
+              <button onClick={() => toggleFeatured(p)} className={`p-2 rounded-md transition-colors ${(p as any).featured ? "text-primary" : "text-muted-foreground hover:text-primary"}`} title="Toggle featured">
+                <Star size={16} className={(p as any).featured ? "fill-primary" : ""} />
+              </button>
               <button onClick={() => setEditing(p)} className="p-2 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground"><Pencil size={16} /></button>
-              <button onClick={() => handleDelete(p.id)} className="p-2 hover:bg-destructive/10 rounded-md text-muted-foreground hover:text-destructive"><Trash2 size={16} /></button>
+              <button onClick={() => handleDelete(p)} className="p-2 hover:bg-destructive/10 rounded-md text-muted-foreground hover:text-destructive"><Trash2 size={16} /></button>
             </div>
           </div>
         ))}
