@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, Wrench, Search, ArrowUpDown, Code } from "lucide-react";
+import { ExternalLink, Wrench, Search, ArrowUpDown, Code, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import useScrollFadeIn from "@/hooks/useScrollFadeIn";
@@ -18,9 +19,24 @@ const filters: { key: Filter; label: string }[] = [
 const statusConfig: Record<string, { label: string; className: string }> = {
   live: { label: "Live", className: "border border-primary/40 text-primary bg-primary/5" },
   released: { label: "Live", className: "border border-primary/40 text-primary bg-primary/5" },
-  in_development: { label: "In Development", className: "border border-accent/40 text-accent bg-accent/5" },
-  maintenance: { label: "Maintenance", className: "border border-muted-foreground/30 text-muted-foreground bg-muted/50 animate-pulse" },
+  in_development: { label: "In Development", className: "border border-yellow-500/40 text-yellow-400 bg-yellow-500/5" },
+  maintenance: { label: "Maintenance", className: "border border-muted-foreground/30 text-muted-foreground bg-muted/50" },
+  beta: { label: "Beta", className: "border border-blue-500/40 text-blue-400 bg-blue-500/5" },
+  private: { label: "Private", className: "border border-muted-foreground/30 text-muted-foreground bg-muted/30" },
+  archived: { label: "Archived", className: "border border-muted-foreground/20 text-muted-foreground/60 bg-muted/20" },
 };
+
+const SkeletonCard = () => (
+  <div className="glass rounded-xl overflow-hidden">
+    <div className="aspect-video skeleton" />
+    <div className="p-5 space-y-3">
+      <div className="h-4 w-20 skeleton" />
+      <div className="h-5 w-3/4 skeleton" />
+      <div className="h-4 w-full skeleton" />
+      <div className="h-9 w-36 skeleton" />
+    </div>
+  </div>
+);
 
 const StudioProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -74,7 +90,7 @@ const StudioProjects = () => {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search projects..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-secondary/50 border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition-shadow"
+                  className="w-full pl-10 pr-4 py-2.5 bg-secondary/50 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
                 />
               </div>
               <div className="relative">
@@ -82,7 +98,7 @@ const StudioProjects = () => {
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as Sort)}
-                  className="pl-9 pr-4 py-2.5 bg-secondary/50 border border-border rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 appearance-none cursor-pointer"
+                  className="pl-9 pr-4 py-2.5 bg-secondary/50 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none cursor-pointer"
                 >
                   <option value="newest">Newest</option>
                   <option value="oldest">Oldest</option>
@@ -95,10 +111,10 @@ const StudioProjects = () => {
                 <button
                   key={f.key}
                   onClick={() => setFilter(f.key)}
-                  className={`relative px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 ${
+                  className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
                     filter === f.key
-                      ? "bg-primary text-primary-foreground shadow-[0_0_16px_hsl(0_100%_36%/0.3)]"
-                      : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      ? "btn-gradient text-primary-foreground"
+                      : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary border border-border/50"
                   }`}
                 >
                   {f.label}
@@ -108,43 +124,55 @@ const StudioProjects = () => {
           </div>
 
           {loading ? (
-            <div className="text-center py-20 text-muted-foreground">Loading...</div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1,2,3].map(i => <SkeletonCard key={i} />)}
+            </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filtered.map((project) => (
                 <div key={project.id} className="glass rounded-xl overflow-hidden card-hover group fade-up">
-                  <div className="aspect-video bg-secondary overflow-hidden relative">
-                    {project.thumbnail_url ? (
-                      <img src={project.thumbnail_url} alt={project.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No thumbnail</div>
-                    )}
-                    <div className="absolute top-3 right-3">
-                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${statusConfig[project.status]?.className || "bg-muted text-muted-foreground"}`}>
-                        {statusConfig[project.status]?.label || project.status}
-                      </span>
+                  <Link to={`/project/${(project as any).slug || project.id}`} className="block">
+                    <div className="aspect-video bg-secondary overflow-hidden relative">
+                      {project.thumbnail_url ? (
+                        <img src={project.thumbnail_url} alt={project.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No thumbnail</div>
+                      )}
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span className="inline-flex items-center gap-2 text-sm font-medium text-primary-foreground bg-primary/80 px-4 py-2 rounded-lg">
+                          <Eye size={14} /> View Details
+                        </span>
+                      </div>
+                      <div className="absolute top-3 right-3">
+                        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full backdrop-blur-sm ${statusConfig[project.status]?.className || "bg-muted text-muted-foreground"}`}>
+                          {statusConfig[project.status]?.label || project.status}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                   <div className="p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <Code size={12} className="text-primary" />
                       <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-secondary text-secondary-foreground capitalize">{project.category}</span>
                     </div>
-                    <h3 className="text-lg font-display font-semibold mb-2 group-hover:text-primary transition-colors">{project.name}</h3>
+                    <Link to={`/project/${(project as any).slug || project.id}`}>
+                      <h3 className="text-lg font-display font-semibold mb-2 group-hover:text-primary transition-colors">{project.name}</h3>
+                    </Link>
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{project.description}</p>
 
                     {isLive(project.status) && project.game_link ? (
-                      <a href={project.game_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover-glow hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02]">
+                      <a href={project.game_link} target="_blank" rel="noopener noreferrer" className="btn-gradient px-4 py-2 text-sm text-primary-foreground" onClick={(e) => e.stopPropagation()}>
                         <ExternalLink size={14} /> Launch Experience
                       </a>
                     ) : project.status === "in_development" ? (
-                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent text-sm font-semibold rounded-md">
+                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 text-yellow-400 text-sm font-semibold rounded-lg border border-yellow-500/20">
                         <Code size={14} /> In Development
                       </span>
                     ) : project.status === "maintenance" ? (
-                      <button disabled className="inline-flex items-center gap-2 px-4 py-2 bg-muted text-muted-foreground text-sm font-semibold rounded-md cursor-not-allowed">
+                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-muted text-muted-foreground text-sm font-semibold rounded-lg">
                         <Wrench size={14} /> Under Maintenance
-                      </button>
+                      </span>
                     ) : null}
                   </div>
                 </div>

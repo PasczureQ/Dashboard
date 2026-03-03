@@ -17,6 +17,7 @@
 
     --primary: 0 100% 36%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 0 100% 50%;
 
     --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 85%;
@@ -58,6 +59,10 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    background-image:
+      linear-gradient(hsl(0 0% 100% / 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(0 0% 100% / 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -95,9 +100,10 @@
   }
 
   .card-hover:hover {
-    @apply -translate-y-1;
+    @apply -translate-y-1.5;
     box-shadow: 0 0 30px hsl(0 100% 36% / 0.12),
                 0 8px 32px hsl(0 0% 0% / 0.6);
+    border-color: hsl(0 100% 36% / 0.15);
   }
 
   .glass {
@@ -146,7 +152,7 @@
     top: 0;
     left: 0;
     height: 2px;
-    background: hsl(0 100% 36%);
+    background: linear-gradient(90deg, hsl(0 100% 36%), hsl(0 100% 50%));
     box-shadow: 0 0 10px hsl(0 100% 36% / 0.5);
     z-index: 100;
     transition: width 0.05s linear;
@@ -162,5 +168,39 @@
   .fade-up.visible {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  /* Gradient button */
+  .btn-gradient {
+    @apply inline-flex items-center gap-2 font-semibold rounded-lg transition-all duration-300;
+    background: linear-gradient(135deg, hsl(0 100% 36%), hsl(0 100% 50%));
+    box-shadow: 0 4px 16px hsl(0 100% 36% / 0.25), inset 0 1px 0 hsl(0 0% 100% / 0.1);
+  }
+
+  .btn-gradient:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 24px hsl(0 100% 36% / 0.4), inset 0 1px 0 hsl(0 0% 100% / 0.15);
+  }
+
+  .btn-gradient:active {
+    transform: scale(0.98);
+  }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    @apply rounded-lg;
+    background: linear-gradient(
+      90deg,
+      hsl(0 0% 10%) 0%,
+      hsl(0 100% 36% / 0.06) 50%,
+      hsl(0 0% 10%) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
 }
