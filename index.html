@@ -3,15 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PaszczureQ — Digital Creator & Developer</title>
-    <meta name="description" content="Building immersive digital experiences, Roblox games, and brands. Explore the portfolio of PaszczureQ." />
+    <title>PaszczureQ — Digital Studio | Games, Brands & Digital Experiences</title>
+    <meta name="description" content="Engineering immersive digital experiences, Roblox games, and brands. Explore the portfolio of PaszczureQ — a premium digital studio." />
     <meta name="author" content="PaszczureQ" />
-    <meta property="og:title" content="PaszczureQ — Digital Creator" />
-    <meta property="og:description" content="Building immersive digital experiences, Roblox games, and brands." />
+    <meta property="og:title" content="PaszczureQ — Digital Studio" />
+    <meta property="og:description" content="Engineering immersive digital experiences, Roblox games, and brands." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="/" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <style>
-      /* Loading screen */
       #loading-screen {
         position: fixed;
         inset: 0;
@@ -20,11 +22,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: opacity 0.5s ease, visibility 0.5s ease;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
       }
       #loading-screen.hide {
         opacity: 0;
         visibility: hidden;
+        pointer-events: none;
       }
       .loader-line {
         width: 120px;
@@ -43,7 +46,7 @@
         width: 40%;
         background: #B30000;
         border-radius: 2px;
-        animation: loaderSlide 1s ease-in-out infinite;
+        animation: loaderSlide 0.8s ease-in-out infinite;
         box-shadow: 0 0 12px rgba(179,0,0,0.6);
       }
       @keyframes loaderSlide {

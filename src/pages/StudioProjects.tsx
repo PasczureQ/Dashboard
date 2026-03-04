@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
-import { ExternalLink, Wrench, Search, ArrowUpDown, Code, Eye } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { ExternalLink, Wrench, Search, ArrowUpDown, Code, Eye, X, Clock } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import useScrollFadeIn from "@/hooks/useScrollFadeIn";
 
 type Project = Tables<"projects">;
-type Filter = "all" | "live" | "in_development" | "maintenance";
+type Filter = "all" | "live" | "in_development" | "maintenance" | "beta" | "private";
 type Sort = "newest" | "oldest" | "status";
 
 const filters: { key: Filter; label: string }[] = [
@@ -14,6 +14,8 @@ const filters: { key: Filter; label: string }[] = [
   { key: "live", label: "Live" },
   { key: "in_development", label: "In Development" },
   { key: "maintenance", label: "Maintenance" },
+  { key: "beta", label: "Beta" },
+  { key: "private", label: "Private" },
 ];
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -40,11 +42,33 @@ const SkeletonCard = () => (
 
 const StudioProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [filter, setFilter] = useState<Filter>("all");
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<Sort>("newest");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const scrollRef = useScrollFadeIn();
+
+  const filter = (searchParams.get("status") as Filter) || "all";
+  const sort = (searchParams.get("sort") as Sort) || "newest";
+  const search = searchParams.get("q") || "";
+
+  const setFilter = (f: Filter) => {
+    const params = new URLSearchParams(searchParams);
+    if (f === "all") params.delete("status"); else params.set("status", f);
+    setSearchParams(params);
+  };
+
+  const setSort = (s: Sort) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("sort", s);
+    setSearchParams(params);
+  };
+
+  const setSearch = (q: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (!q) params.delete("q"); else params.set("q", q);
+    setSearchParams(params);
+  };
+
+  const resetFilters = () => setSearchParams({});
 
   useEffect(() => {
     supabase.from("projects").select("*").neq("category", "brand").order("display_order").then(({ data }) => {
@@ -53,22 +77,26 @@ const StudioProjects = () => {
     });
   }, []);
 
-  const filtered = projects
-    .filter((p) => {
-      const matchesFilter =
-        filter === "all" ? true :
-        filter === "live" ? (p.status === "live" || p.status === "released") :
-        p.status === filter;
-      const matchesSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.description?.toLowerCase().includes(search.toLowerCase());
-      return matchesFilter && matchesSearch;
-    })
-    .sort((a, b) => {
-      if (sort === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      if (sort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      return (a.status ?? "").localeCompare(b.status ?? "");
-    });
+  const filtered = useMemo(() => {
+    const searchLower = search.toLowerCase();
+    return projects
+      .filter((p) => {
+        const matchesFilter =
+          filter === "all" ? true :
+          filter === "live" ? (p.status === "live" || p.status === "released") :
+          p.status === filter;
+        const matchesSearch = !search || p.name.toLowerCase().includes(searchLower) || p.description?.toLowerCase().includes(searchLower);
+        return matchesFilter && matchesSearch;
+      })
+      .sort((a, b) => {
+        if (sort === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        if (sort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        return (a.status ?? "").localeCompare(b.status ?? "");
+      });
+  }, [projects, filter, sort, search]);
 
   const isLive = (status: string) => status === "live" || status === "released";
+  const hasActiveFilters = filter !== "all" || search || sort !== "newest";
 
   return (
     <div className="page-transition" ref={scrollRef}>
@@ -106,7 +134,7 @@ const StudioProjects = () => {
                 </select>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               {filters.map((f) => (
                 <button
                   key={f.key}
@@ -120,6 +148,11 @@ const StudioProjects = () => {
                   {f.label}
                 </button>
               ))}
+              {hasActiveFilters && (
+                <button onClick={resetFilters} className="inline-flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  <X size={12} /> Reset
+                </button>
+              )}
             </div>
           </div>
 
@@ -131,21 +164,20 @@ const StudioProjects = () => {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filtered.map((project) => (
                 <div key={project.id} className="glass rounded-xl overflow-hidden card-hover group fade-up">
-                  <Link to={`/project/${(project as any).slug || project.id}`} className="block">
+                  <Link to={`/project/${project.slug || project.id}`} className="block">
                     <div className="aspect-video bg-secondary overflow-hidden relative">
                       {project.thumbnail_url ? (
                         <img src={project.thumbnail_url} alt={project.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No thumbnail</div>
                       )}
-                      {/* Hover overlay */}
                       <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <span className="inline-flex items-center gap-2 text-sm font-medium text-primary-foreground bg-primary/80 px-4 py-2 rounded-lg">
                           <Eye size={14} /> View Details
                         </span>
                       </div>
                       <div className="absolute top-3 right-3">
-                        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full backdrop-blur-sm ${statusConfig[project.status]?.className || "bg-muted text-muted-foreground"}`}>
+                        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full backdrop-blur-sm badge-pulse ${statusConfig[project.status]?.className || "bg-muted text-muted-foreground"}`}>
                           {statusConfig[project.status]?.label || project.status}
                         </span>
                       </div>
@@ -156,10 +188,13 @@ const StudioProjects = () => {
                       <Code size={12} className="text-primary" />
                       <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-secondary text-secondary-foreground capitalize">{project.category}</span>
                     </div>
-                    <Link to={`/project/${(project as any).slug || project.id}`}>
+                    <Link to={`/project/${project.slug || project.id}`}>
                       <h3 className="text-lg font-display font-semibold mb-2 group-hover:text-primary transition-colors">{project.name}</h3>
                     </Link>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{project.description}</p>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{project.description}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+                      <Clock size={10} /> {new Date(project.updated_at).toLocaleDateString()}
+                    </div>
 
                     {isLive(project.status) && project.game_link ? (
                       <a href={project.game_link} target="_blank" rel="noopener noreferrer" className="btn-gradient px-4 py-2 text-sm text-primary-foreground" onClick={(e) => e.stopPropagation()}>

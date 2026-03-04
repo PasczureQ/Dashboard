@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, FolderOpen, Users, Share2, Mail, LogOut } from "lucide-react";
+import { LayoutDashboard, FolderOpen, Users, Share2, Mail, LogOut, Settings } from "lucide-react";
 
 const adminNav = [
   { label: "Overview", path: "/admin/dashboard", icon: LayoutDashboard },
@@ -8,6 +8,7 @@ const adminNav = [
   { label: "Team", path: "/admin/staff", icon: Users },
   { label: "Network", path: "/admin/socials", icon: Share2 },
   { label: "Messages", path: "/admin/messages", icon: Mail },
+  { label: "Settings", path: "/admin/settings", icon: Settings },
 ];
 
 const AdminLayout = () => {
@@ -29,7 +30,7 @@ const AdminLayout = () => {
   return (
     <div className="page-transition min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-card hidden md:flex flex-col fixed top-16 bottom-0">
+      <aside className="w-64 border-r border-border glass-strong hidden md:flex flex-col fixed top-16 bottom-0">
         <div className="p-4 border-b border-border">
           <h2 className="font-display font-bold text-primary">Control Center</h2>
           <p className="text-xs text-muted-foreground mt-1 truncate">{user.email}</p>
@@ -39,9 +40,9 @@ const AdminLayout = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 location.pathname === item.path
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/10 text-primary glow-red-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               }`}
             >
@@ -62,7 +63,7 @@ const AdminLayout = () => {
       </aside>
 
       {/* Mobile nav */}
-      <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-card border-b border-border overflow-x-auto">
+      <div className="md:hidden fixed top-16 left-0 right-0 z-40 glass-strong border-b border-border overflow-x-auto">
         <div className="flex p-2 gap-1">
           {adminNav.map((item) => (
             <Link

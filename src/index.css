@@ -60,9 +60,11 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     background-image:
+      radial-gradient(ellipse 80% 60% at 10% 90%, hsl(0 100% 36% / 0.04), transparent),
+      radial-gradient(ellipse 60% 50% at 90% 10%, hsl(0 100% 36% / 0.03), transparent),
       linear-gradient(hsl(0 0% 100% / 0.02) 1px, transparent 1px),
       linear-gradient(90deg, hsl(0 0% 100% / 0.02) 1px, transparent 1px);
-    background-size: 60px 60px;
+    background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -71,6 +73,12 @@
 }
 
 @layer utilities {
+  /* Global transition system */
+  .transition-base {
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Red glow system */
   .glow-red {
     box-shadow: 0 0 20px hsl(0 100% 36% / 0.3),
                 0 0 60px hsl(0 100% 36% / 0.1);
@@ -95,17 +103,19 @@
                 0 0 60px hsl(0 100% 36% / 0.15);
   }
 
+  /* Card system with 3D tilt */
   .card-hover {
     @apply transition-all duration-300 ease-out;
   }
 
   .card-hover:hover {
-    @apply -translate-y-1.5;
+    transform: translateY(-6px) perspective(1000px) rotateX(1deg);
     box-shadow: 0 0 30px hsl(0 100% 36% / 0.12),
-                0 8px 32px hsl(0 0% 0% / 0.6);
-    border-color: hsl(0 100% 36% / 0.15);
+                0 12px 40px hsl(0 0% 0% / 0.6);
+    border-color: hsl(0 100% 36% / 0.2);
   }
 
+  /* Glass system */
   .glass {
     background: hsl(0 0% 7% / 0.6);
     backdrop-filter: blur(16px);
@@ -114,20 +124,21 @@
   }
 
   .glass-strong {
-    background: hsl(0 0% 7% / 0.8);
+    background: hsl(0 0% 7% / 0.85);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid hsl(0 0% 100% / 0.06);
   }
 
+  /* Page transitions */
   .page-transition {
-    animation: pageEnter 0.5s ease-out;
+    animation: pageEnter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   @keyframes pageEnter {
     from {
       opacity: 0;
-      transform: translateY(16px);
+      transform: translateY(20px);
     }
     to {
       opacity: 1;
@@ -135,6 +146,7 @@
     }
   }
 
+  /* Decorative elements */
   .red-line {
     @apply h-px w-full;
     background: linear-gradient(90deg, transparent, hsl(0 100% 36% / 0.5), transparent);
@@ -162,7 +174,7 @@
   .fade-up {
     opacity: 0;
     transform: translateY(24px);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .fade-up.visible {
@@ -170,7 +182,7 @@
     transform: translateY(0);
   }
 
-  /* Gradient button */
+  /* Gradient button with press effect */
   .btn-gradient {
     @apply inline-flex items-center gap-2 font-semibold rounded-lg transition-all duration-300;
     background: linear-gradient(135deg, hsl(0 100% 36%), hsl(0 100% 50%));
@@ -183,16 +195,16 @@
   }
 
   .btn-gradient:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
 
-  /* Skeleton shimmer */
+  /* Skeleton shimmer with red tint */
   .skeleton {
     @apply rounded-lg;
     background: linear-gradient(
       90deg,
       hsl(0 0% 10%) 0%,
-      hsl(0 100% 36% / 0.06) 50%,
+      hsl(0 100% 36% / 0.08) 50%,
       hsl(0 0% 10%) 100%
     );
     background-size: 200% 100%;
@@ -202,5 +214,40 @@
   @keyframes shimmer {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
+  }
+
+  /* Badge pulse */
+  .badge-pulse {
+    animation: badgePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes badgePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Animated gradient border */
+  .border-gradient {
+    position: relative;
+  }
+
+  .border-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(0 100% 36% / 0.3), transparent, hsl(0 100% 36% / 0.3));
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    pointer-events: none;
+  }
+
+  /* Maintenance banner */
+  .maintenance-banner {
+    background: linear-gradient(90deg, hsl(0 100% 36% / 0.15), hsl(0 100% 50% / 0.1), hsl(0 100% 36% / 0.15));
+    border-bottom: 1px solid hsl(0 100% 36% / 0.3);
   }
 }
