@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { ArrowRight, Zap, Rocket, Users, Briefcase } from "lucide-react";
+import { ArrowRight, Zap, Rocket, Users, Briefcase, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -54,26 +54,28 @@ const SkeletonCard = () => (
 
 const Home = () => {
   const [featured, setFeatured] = useState<Project | null>(null);
+  const [recentUpdates, setRecentUpdates] = useState<Project[]>([]);
   const [counts, setCounts] = useState({ projects: 0, active: 0, ventures: 0, team: 0 });
   const [loading, setLoading] = useState(true);
   const scrollRef = useScrollFadeIn();
 
   useEffect(() => {
     const load = async () => {
-      const [fp, pc, ac, vc, tc] = await Promise.all([
+      const [fp, pc, ac, vc, tc, recent] = await Promise.all([
         supabase.from("projects").select("*").eq("featured", true).order("created_at", { ascending: false }).limit(1),
         supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand"),
         supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand").in("status", ["live", "released", "in_development"]),
         supabase.from("projects").select("id", { count: "exact", head: true }).eq("category", "brand"),
         supabase.from("staff").select("id", { count: "exact", head: true }),
+        supabase.from("projects").select("*").order("updated_at", { ascending: false }).limit(3),
       ]);
-      // Fallback to latest live project if no featured
       let featuredProject = fp.data?.[0] ?? null;
       if (!featuredProject) {
         const { data } = await supabase.from("projects").select("*").neq("category", "brand").in("status", ["live", "released"]).order("created_at", { ascending: false }).limit(1);
         featuredProject = data?.[0] ?? null;
       }
       setFeatured(featuredProject);
+      setRecentUpdates(recent.data ?? []);
       setCounts({
         projects: pc.count ?? 0,
         active: ac.count ?? 0,
@@ -108,10 +110,10 @@ const Home = () => {
               <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Digital Studio</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.05] mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-display font-bold leading-[1.05] mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
               Engineering digital
               <br />
-              <span className="text-primary glow-red-text">experiences</span>
+              <span className="text-primary glow-red-text animate-glow-pulse">experiences</span>
             </h1>
 
             <div className="w-24 h-0.5 bg-gradient-to-r from-primary to-primary/40 mb-8 opacity-0 animate-fade-in rounded-full shadow-[0_0_12px_hsl(0_100%_36%/0.4)]" style={{ animationDelay: "0.3s" }} />
@@ -121,16 +123,10 @@ const Home = () => {
             </p>
 
             <div className="flex flex-wrap gap-4 opacity-0 animate-fade-in" style={{ animationDelay: "0.5s" }}>
-              <Link
-                to="/studio-projects"
-                className="btn-gradient px-7 py-3.5 text-primary-foreground"
-              >
+              <Link to="/studio-projects" className="btn-gradient px-7 py-3.5 text-primary-foreground">
                 Explore Projects <ArrowRight size={18} />
               </Link>
-              <Link
-                to="/ventures"
-                className="inline-flex items-center gap-2 px-7 py-3.5 border border-border text-foreground font-semibold rounded-lg hover:bg-secondary hover:border-primary/20 transition-all duration-300"
-              >
+              <Link to="/ventures" className="inline-flex items-center gap-2 px-7 py-3.5 border border-border text-foreground font-semibold rounded-lg hover:bg-secondary hover:border-primary/20 transition-all duration-300">
                 Enter Studio
               </Link>
             </div>
@@ -168,7 +164,7 @@ const Home = () => {
           {loading ? (
             <SkeletonCard />
           ) : featured ? (
-            <div className="glass rounded-xl p-8 md:p-12 card-hover fade-up">
+            <div className="glass rounded-xl p-8 md:p-12 card-hover fade-up border-gradient">
               <div className="flex flex-col md:flex-row gap-8 items-center">
                 <div className="w-full md:w-1/2 aspect-video rounded-lg bg-secondary overflow-hidden">
                   {featured.thumbnail_url ? (
@@ -178,16 +174,21 @@ const Home = () => {
                   )}
                 </div>
                 <div className="w-full md:w-1/2">
-                  <span className="inline-block px-3 py-1 text-xs font-semibold bg-primary/15 text-primary rounded-full mb-4 capitalize">{featured.status === "released" ? "Live" : featured.status.replace("_", " ")}</span>
+                  <span className="inline-block px-3 py-1 text-xs font-semibold bg-primary/15 text-primary rounded-full mb-4 capitalize badge-pulse">
+                    {featured.status === "released" ? "Live" : featured.status.replace("_", " ")}
+                  </span>
                   <h3 className="text-2xl md:text-3xl font-display font-bold mb-3">{featured.name}</h3>
-                  <p className="text-muted-foreground mb-6 leading-relaxed">{featured.description}</p>
+                  <p className="text-muted-foreground mb-4 leading-relaxed">{featured.description}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
+                    <Clock size={12} /> Updated {new Date(featured.updated_at).toLocaleDateString()}
+                  </div>
                   {featured.game_link && (featured.status === "live" || featured.status === "released") ? (
                     <a href={featured.game_link} target="_blank" rel="noopener noreferrer" className="btn-gradient px-6 py-3 text-sm text-primary-foreground">
                       Launch Experience <ArrowRight size={16} />
                     </a>
                   ) : (
-                    <Link to="/studio-projects" className="inline-flex items-center gap-2 text-primary font-medium hover:underline group">
-                      View all projects <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    <Link to={`/project/${featured.slug || featured.id}`} className="inline-flex items-center gap-2 text-primary font-medium hover:underline group">
+                      View project <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                     </Link>
                   )}
                 </div>
@@ -203,6 +204,43 @@ const Home = () => {
 
       <div className="red-line" />
 
+      {/* Recent Updates */}
+      {recentUpdates.length > 0 && (
+        <>
+          <section className="py-24">
+            <div className="container mx-auto px-4">
+              <div className="flex items-center gap-3 mb-8 fade-up">
+                <div className="red-dot" />
+                <h2 className="text-sm font-medium tracking-wider uppercase text-muted-foreground">Recent Updates</h2>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-6">
+                {recentUpdates.map((project, i) => (
+                  <Link
+                    key={project.id}
+                    to={`/project/${project.slug || project.id}`}
+                    className="glass rounded-xl overflow-hidden card-hover group fade-up block"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  >
+                    <div className="aspect-video bg-secondary overflow-hidden">
+                      {project.thumbnail_url ? (
+                        <img src={project.thumbnail_url} alt={project.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No thumbnail</div>
+                      )}
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-display font-semibold mb-1 group-hover:text-primary transition-colors truncate">{project.name}</h3>
+                      <p className="text-xs text-muted-foreground">Updated {new Date(project.updated_at).toLocaleDateString()}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+          <div className="red-line" />
+        </>
+      )}
+
       {/* Live Studio Metrics */}
       <section className="py-24">
         <div className="container mx-auto px-4">
@@ -212,7 +250,7 @@ const Home = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 fade-up">
             {stats.map((stat) => (
-              <div key={stat.label} className="glass rounded-xl p-6 text-center group card-hover">
+              <div key={stat.label} className="glass rounded-xl p-6 text-center group card-hover border-gradient">
                 <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
                   <stat.icon size={22} className="text-primary" />
                 </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Send, CheckCircle } from "lucide-react";
+import { MessageSquare, Send, CheckCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -37,7 +37,7 @@ const Connect = () => {
           <h1 className="text-4xl md:text-6xl font-display font-bold mb-4">Let's Build Something.</h1>
           <p className="text-muted-foreground mb-12">Have an idea? Want to collaborate? Reach out.</p>
 
-          <div className="glass rounded-xl p-6 mb-12 card-hover">
+          <div className="glass rounded-xl p-6 mb-12 card-hover border-gradient">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <MessageSquare className="text-primary" size={22} />
@@ -53,7 +53,7 @@ const Connect = () => {
           <h2 className="text-xl font-display font-semibold mb-6">Or send a message</h2>
 
           {sent ? (
-            <div className="glass rounded-xl p-8 text-center animate-fade-in">
+            <div className="glass rounded-xl p-8 text-center animate-fade-in border-gradient">
               <CheckCircle size={48} className="text-primary mx-auto mb-4" />
               <h3 className="text-xl font-display font-bold mb-2">Message Sent!</h3>
               <p className="text-muted-foreground">Thanks for reaching out. I'll get back to you soon.</p>
@@ -62,18 +62,18 @@ const Connect = () => {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium mb-2 text-muted-foreground">Name</label>
-                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition-shadow" placeholder="Your name" required maxLength={100} />
+                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" placeholder="Your name" required maxLength={100} />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-muted-foreground">Email</label>
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition-shadow" placeholder="you@email.com" required maxLength={255} />
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" placeholder="you@email.com" required maxLength={255} />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-muted-foreground">Message</label>
-                <textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={5} className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition-shadow resize-none" placeholder="What's on your mind?" required maxLength={1000} />
+                <textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={5} className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" placeholder="What's on your mind?" required maxLength={1000} />
               </div>
-              <button type="submit" disabled={submitting} className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary text-primary-foreground font-semibold rounded-md hover-glow hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100">
-                <Send size={16} /> {submitting ? "Sending..." : "Send Message"}
+              <button type="submit" disabled={submitting} className="btn-gradient px-7 py-3.5 text-primary-foreground disabled:opacity-50">
+                {submitting ? <><Loader2 size={16} className="animate-spin" /> Sending...</> : <><Send size={16} /> Send Message</>}
               </button>
             </form>
           )}

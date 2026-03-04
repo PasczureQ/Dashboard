@@ -4,9 +4,17 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Hide loading screen
-window.addEventListener("load", () => {
-  setTimeout(() => {
-    document.getElementById("loading-screen")?.classList.add("hide");
-  }, 400);
-});
+// Hide loading screen quickly
+const hideLoader = () => {
+  const el = document.getElementById("loading-screen");
+  if (el) {
+    el.classList.add("hide");
+    setTimeout(() => el.remove(), 500);
+  }
+};
+
+if (document.readyState === "complete") {
+  hideLoader();
+} else {
+  window.addEventListener("load", () => setTimeout(hideLoader, 200));
+}
