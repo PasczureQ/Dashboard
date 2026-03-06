@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import MaintenancePage from "@/pages/Maintenance";
+
+const MaintenancePage = lazy(() => import("@/pages/Maintenance"));
+import { lazy, Suspense } from "react";
 
 const MaintenanceGuard = ({ children }: { children: React.ReactNode }) => {
   const [maintenance, setMaintenance] = useState(false);
@@ -10,10 +12,15 @@ const MaintenanceGuard = ({ children }: { children: React.ReactNode }) => {
   const [checked, setChecked] = useState(false);
   const { isAdmin } = useAuth();
   const location = useLocation();
+  const fetchedRef = useRef(false);
 
   const isAdminRoute = location.pathname.startsWith("/admin");
 
   useEffect(() => {
+    // Only fetch once — maintenance state doesn't change per route
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
     supabase
       .from("site_settings")
       .select("maintenance_mode, maintenance_message")
@@ -25,13 +32,23 @@ const MaintenanceGuard = ({ children }: { children: React.ReactNode }) => {
           setMessage(data.maintenance_message || "");
         }
         setChecked(true);
+      })
+      .catch(() => {
+        setChecked(true); // Don't block on error
       });
-  }, [location.pathname]);
+  }, []);
 
-  if (!checked) return null;
+  // Show children immediately while checking — don't block render
+  if (!checked) {
+    return <>{children}</>;
+  }
 
   if (maintenance && !isAdmin && !isAdminRoute) {
-    return <MaintenancePage message={message} />;
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-background" />}>
+        <MaintenancePage message={message} />
+      </Suspense>
+    );
   }
 
   return (
