@@ -13,6 +13,8 @@
     <link rel="canonical" href="/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" as="style" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" />
     <style>
       #loading-screen {
         position: fixed;
@@ -54,6 +56,8 @@
         100% { left: 100%; }
       }
     </style>
+    <!-- Fallback: hide loader after 5s even if JS fails -->
+    <script>setTimeout(function(){var e=document.getElementById('loading-screen');if(e){e.classList.add('hide');setTimeout(function(){e.remove()},500)}},5000);</script>
   </head>
   <body>
     <div id="loading-screen">
@@ -61,5 +65,16 @@
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- GitHub Pages SPA redirect script -->
+    <script>
+      // Handle GitHub Pages 404 redirect for SPA routing
+      (function(){
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
   </body>
 </html>

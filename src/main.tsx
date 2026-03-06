@@ -4,7 +4,7 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Hide loading screen quickly
+// Hide loading screen as soon as React mounts
 const hideLoader = () => {
   const el = document.getElementById("loading-screen");
   if (el) {
@@ -13,8 +13,5 @@ const hideLoader = () => {
   }
 };
 
-if (document.readyState === "complete") {
-  hideLoader();
-} else {
-  window.addEventListener("load", () => setTimeout(hideLoader, 200));
-}
+// Hide immediately — React has mounted
+hideLoader();
