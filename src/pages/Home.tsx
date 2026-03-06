@@ -11,6 +11,7 @@ const AnimatedNumber = ({ target }: { target: number }) => {
   const [value, setValue] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const animated = useRef(false);
+  const rafRef = useRef<number>(0);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -24,15 +25,18 @@ const AnimatedNumber = ({ target }: { target: number }) => {
             const progress = Math.min(elapsed / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3);
             setValue(Math.round(eased * target));
-            if (progress < 1) requestAnimationFrame(animate);
+            if (progress < 1) rafRef.current = requestAnimationFrame(animate);
           };
-          requestAnimationFrame(animate);
+          rafRef.current = requestAnimationFrame(animate);
         }
       },
       { threshold: 0.5 }
     );
     if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(rafRef.current);
+    };
   }, [target]);
 
   return <span ref={ref}>{value}</span>;
