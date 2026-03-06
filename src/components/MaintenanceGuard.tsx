@@ -1,10 +1,9 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 const MaintenancePage = lazy(() => import("@/pages/Maintenance"));
-import { lazy, Suspense } from "react";
 
 const MaintenanceGuard = ({ children }: { children: React.ReactNode }) => {
   const [maintenance, setMaintenance] = useState(false);
@@ -17,25 +16,26 @@ const MaintenanceGuard = ({ children }: { children: React.ReactNode }) => {
   const isAdminRoute = location.pathname.startsWith("/admin");
 
   useEffect(() => {
-    // Only fetch once — maintenance state doesn't change per route
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    supabase
-      .from("site_settings")
-      .select("maintenance_mode, maintenance_message")
-      .limit(1)
-      .single()
-      .then(({ data }) => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await supabase
+          .from("site_settings")
+          .select("maintenance_mode, maintenance_message")
+          .limit(1)
+          .single();
         if (data) {
           setMaintenance(data.maintenance_mode);
           setMessage(data.maintenance_message || "");
         }
-        setChecked(true);
-      })
-      .catch(() => {
-        setChecked(true); // Don't block on error
-      });
+      } catch {
+        // Don't block on error
+      }
+      setChecked(true);
+    };
+    fetchSettings();
   }, []);
 
   // Show children immediately while checking — don't block render
