@@ -26,10 +26,14 @@ const Team = () => {
   const scrollRef = useScrollFadeIn();
 
   useEffect(() => {
+    let cancelled = false;
     supabase.from("staff").select("*").order("display_order").then(({ data }) => {
-      setStaff(data ?? []);
-      setLoading(false);
+      if (!cancelled) {
+        setStaff(data ?? []);
+        setLoading(false);
+      }
     });
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -52,7 +56,7 @@ const Team = () => {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {staff.map((member) => {
-                const socialLinks = (member as any).social_links as Record<string, string> | null;
+                const socialLinks = member.social_links as Record<string, string> | null;
                 return (
                   <div key={member.id} className="glass rounded-xl p-6 card-hover group fade-up">
                     <div className="relative mb-5">
@@ -68,7 +72,6 @@ const Team = () => {
                           <span className="text-2xl font-display font-bold text-primary">{member.name[0]}</span>
                         </div>
                       )}
-                      <div className="absolute -inset-1 rounded-full bg-primary/0 group-hover:bg-primary/5 blur-xl transition-all duration-500 -z-10" />
                     </div>
                     <h3 className="text-xl font-display font-semibold mb-1 group-hover:text-primary transition-colors">{member.name}</h3>
                     <span className="text-sm text-primary font-medium">{member.role}</span>
