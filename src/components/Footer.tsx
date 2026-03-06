@@ -1,20 +1,30 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Social = Tables<"socials">;
 
+// Simple module-level cache so footer doesn't re-fetch on every page
+let cachedSocials: Social[] | null = null;
+
 const Footer = () => {
-  const [socials, setSocials] = useState<Social[]>([]);
+  const [socials, setSocials] = useState<Social[]>(cachedSocials ?? []);
+  const fetchedRef = useRef(!!cachedSocials);
 
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     supabase
       .from("socials")
       .select("*")
       .eq("enabled", true)
       .order("display_order")
-      .then(({ data }) => setSocials(data ?? []));
+      .then(({ data }) => {
+        const result = data ?? [];
+        cachedSocials = result;
+        setSocials(result);
+      });
   }, []);
 
   return (
