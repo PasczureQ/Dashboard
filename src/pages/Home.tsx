@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { ArrowRight, Zap, Rocket, Users, Briefcase, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,39 +64,47 @@ const Home = () => {
   const scrollRef = useScrollFadeIn();
 
   useEffect(() => {
+    let cancelled = false;
     const load = async () => {
-      const [fp, pc, ac, vc, tc, recent] = await Promise.all([
-        supabase.from("projects").select("*").eq("featured", true).order("created_at", { ascending: false }).limit(1),
-        supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand"),
-        supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand").in("status", ["live", "released", "in_development"]),
-        supabase.from("projects").select("id", { count: "exact", head: true }).eq("category", "brand"),
-        supabase.from("staff").select("id", { count: "exact", head: true }),
-        supabase.from("projects").select("*").order("updated_at", { ascending: false }).limit(3),
-      ]);
-      let featuredProject = fp.data?.[0] ?? null;
-      if (!featuredProject) {
-        const { data } = await supabase.from("projects").select("*").neq("category", "brand").in("status", ["live", "released"]).order("created_at", { ascending: false }).limit(1);
-        featuredProject = data?.[0] ?? null;
+      try {
+        const [fp, pc, ac, vc, tc, recent] = await Promise.all([
+          supabase.from("projects").select("*").eq("featured", true).order("created_at", { ascending: false }).limit(1),
+          supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand"),
+          supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand").in("status", ["live", "released", "in_development"]),
+          supabase.from("projects").select("id", { count: "exact", head: true }).eq("category", "brand"),
+          supabase.from("staff").select("id", { count: "exact", head: true }),
+          supabase.from("projects").select("*").order("updated_at", { ascending: false }).limit(3),
+        ]);
+        if (cancelled) return;
+        let featuredProject = fp.data?.[0] ?? null;
+        if (!featuredProject) {
+          const { data } = await supabase.from("projects").select("*").neq("category", "brand").in("status", ["live", "released"]).order("created_at", { ascending: false }).limit(1);
+          if (cancelled) return;
+          featuredProject = data?.[0] ?? null;
+        }
+        setFeatured(featuredProject);
+        setRecentUpdates(recent.data ?? []);
+        setCounts({
+          projects: pc.count ?? 0,
+          active: ac.count ?? 0,
+          ventures: vc.count ?? 0,
+          team: tc.count ?? 0,
+        });
+      } catch {
+        // Silently handle errors
       }
-      setFeatured(featuredProject);
-      setRecentUpdates(recent.data ?? []);
-      setCounts({
-        projects: pc.count ?? 0,
-        active: ac.count ?? 0,
-        ventures: vc.count ?? 0,
-        team: tc.count ?? 0,
-      });
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     };
     load();
+    return () => { cancelled = true; };
   }, []);
 
-  const stats = [
+  const stats = useMemo(() => [
     { value: counts.projects, label: "Total Projects", icon: Rocket },
     { value: counts.active, label: "Active Builds", icon: Zap },
     { value: counts.ventures, label: "Ventures", icon: Briefcase },
     { value: counts.team, label: "Team Members", icon: Users },
-  ];
+  ], [counts]);
 
   return (
     <div className="page-transition" ref={scrollRef}>
@@ -104,8 +112,6 @@ const Home = () => {
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
         <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/4 blur-[160px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] rounded-full bg-primary/3 blur-[120px] pointer-events-none" />
-        <div className="absolute top-24 right-32 w-1.5 h-1.5 rounded-full bg-primary animate-pulse-glow" />
-        <div className="absolute bottom-32 left-24 w-1 h-1 rounded-full bg-primary/60 animate-pulse-glow" style={{ animationDelay: "1s" }} />
 
         <div className="container mx-auto px-4">
           <div className="max-w-3xl">
@@ -117,7 +123,7 @@ const Home = () => {
             <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-display font-bold leading-[1.05] mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
               Engineering digital
               <br />
-              <span className="text-primary glow-red-text animate-glow-pulse">experiences</span>
+              <span className="text-primary glow-red-text">experiences</span>
             </h1>
 
             <div className="w-24 h-0.5 bg-gradient-to-r from-primary to-primary/40 mb-8 opacity-0 animate-fade-in rounded-full shadow-[0_0_12px_hsl(0_100%_36%/0.4)]" style={{ animationDelay: "0.3s" }} />
@@ -218,12 +224,11 @@ const Home = () => {
                 <h2 className="text-sm font-medium tracking-wider uppercase text-muted-foreground">Recent Updates</h2>
               </div>
               <div className="grid sm:grid-cols-3 gap-6">
-                {recentUpdates.map((project, i) => (
+                {recentUpdates.map((project) => (
                   <Link
                     key={project.id}
                     to={`/project/${project.slug || project.id}`}
                     className="glass rounded-xl overflow-hidden card-hover group fade-up block"
-                    style={{ animationDelay: `${i * 0.1}s` }}
                   >
                     <div className="aspect-video bg-secondary overflow-hidden">
                       {project.thumbnail_url ? (
@@ -258,7 +263,7 @@ const Home = () => {
                 <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
                   <stat.icon size={22} className="text-primary" />
                 </div>
-                <div className="text-3xl md:text-5xl font-display font-bold text-primary mb-2 group-hover:glow-red-text transition-all duration-300">
+                <div className="text-3xl md:text-5xl font-display font-bold text-primary mb-2">
                   <AnimatedNumber target={stat.value} />
                 </div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>

@@ -12,20 +12,37 @@ const useScrollFadeIn = () => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             entry.target.classList.add("visible");
-            observerRef.current?.unobserve(entry.target); // Stop observing once visible
+            observerRef.current?.unobserve(entry.target);
           }
         }
       },
       { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
     );
 
-    const elements = ref.current?.querySelectorAll(".fade-up");
-    elements?.forEach((el) => observerRef.current?.observe(el));
+    // Use MutationObserver to handle dynamically loaded content
+    const el = ref.current;
+    if (!el) return;
+    
+    const observeElements = () => {
+      const elements = el.querySelectorAll(".fade-up:not(.visible)");
+      elements.forEach((e) => observerRef.current?.observe(e));
+    };
+    
+    observeElements();
+    
+    // Watch for new elements added to the DOM
+    const mutationObserver = new MutationObserver(observeElements);
+    mutationObserver.observe(el, { childList: true, subtree: true });
+    
+    return () => mutationObserver.disconnect();
   }, []);
 
   useEffect(() => {
-    setupObserver();
-    return () => observerRef.current?.disconnect();
+    const cleanup = setupObserver();
+    return () => {
+      cleanup?.();
+      observerRef.current?.disconnect();
+    };
   }, [setupObserver]);
 
   return ref;
