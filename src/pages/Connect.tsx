@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { MessageSquare, Send, CheckCircle, Loader2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { MessageSquare, Send, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -7,22 +7,49 @@ const Connect = () => {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
+  const [touched, setTouched] = useState({ name: false, email: false, message: false });
+
+  const validation = useMemo(() => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return {
+      name: form.name.trim().length >= 2,
+      email: emailRegex.test(form.email.trim()),
+      message: form.message.trim().length >= 10,
+    };
+  }, [form]);
+
+  const isValid = validation.name && validation.email && validation.message;
+
+  const handleBlur = (field: keyof typeof touched) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched({ name: true, email: true, message: true });
+    
+    if (!isValid) {
+      toast({ title: "Validation Error", description: "Please fill out all fields correctly.", variant: "destructive" });
+      return;
+    }
+    
     setSubmitting(true);
-    const { error } = await supabase.from("contact_messages").insert({
-      name: form.name.trim(),
-      email: form.email.trim(),
-      message: form.message.trim(),
-    });
-    setSubmitting(false);
-    if (error) {
-      toast({ title: "Error", description: "Failed to send message. Try again.", variant: "destructive" });
-    } else {
+    try {
+      const { error } = await supabase.from("contact_messages").insert({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        message: form.message.trim(),
+      });
+      if (error) throw error;
       setSent(true);
       setForm({ name: "", email: "", message: "" });
+      setTouched({ name: false, email: false, message: false });
       setTimeout(() => setSent(false), 4000);
+    } catch (err) {
+      console.error("[v0] Contact form error:", err);
+      toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -62,17 +89,60 @@ const Connect = () => {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium mb-2 text-muted-foreground">Name</label>
-                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" placeholder="Your name" required maxLength={100} />
+                <input 
+                  type="text" 
+                  value={form.name} 
+                  onChange={(e) => setForm({ ...form, name: e.target.value })} 
+                  onBlur={() => handleBlur("name")}
+                  className={`w-full px-4 py-3 bg-secondary/50 border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all ${touched.name && !validation.name ? "border-destructive" : "border-border"}`} 
+                  placeholder="Your name" 
+                  required 
+                  maxLength={100} 
+                />
+                {touched.name && !validation.name && (
+                  <p className="mt-1 text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle size={12} /> Name must be at least 2 characters
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-muted-foreground">Email</label>
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" placeholder="you@email.com" required maxLength={255} />
+                <input 
+                  type="email" 
+                  value={form.email} 
+                  onChange={(e) => setForm({ ...form, email: e.target.value })} 
+                  onBlur={() => handleBlur("email")}
+                  className={`w-full px-4 py-3 bg-secondary/50 border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all ${touched.email && !validation.email ? "border-destructive" : "border-border"}`} 
+                  placeholder="you@email.com" 
+                  required 
+                  maxLength={255} 
+                />
+                {touched.email && !validation.email && (
+                  <p className="mt-1 text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle size={12} /> Please enter a valid email address
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-muted-foreground">Message</label>
-                <textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={5} className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" placeholder="What's on your mind?" required maxLength={1000} />
+                <textarea 
+                  value={form.message} 
+                  onChange={(e) => setForm({ ...form, message: e.target.value })} 
+                  onBlur={() => handleBlur("message")}
+                  rows={5} 
+                  className={`w-full px-4 py-3 bg-secondary/50 border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none ${touched.message && !validation.message ? "border-destructive" : "border-border"}`} 
+                  placeholder="What's on your mind?" 
+                  required 
+                  maxLength={1000} 
+                />
+                {touched.message && !validation.message && (
+                  <p className="mt-1 text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle size={12} /> Message must be at least 10 characters
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground text-right">{form.message.length}/1000</p>
               </div>
-              <button type="submit" disabled={submitting} className="btn-gradient px-7 py-3.5 text-primary-foreground disabled:opacity-50">
+              <button type="submit" disabled={submitting || !isValid} className="btn-gradient px-7 py-3.5 text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed">
                 {submitting ? <><Loader2 size={16} className="animate-spin" /> Sending...</> : <><Send size={16} /> Send Message</>}
               </button>
             </form>

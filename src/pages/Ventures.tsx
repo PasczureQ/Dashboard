@@ -14,16 +14,39 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   construction: { label: "Launching Soon", className: "border border-accent/40 text-accent bg-accent/5 animate-pulse" },
 };
 
+const SkeletonCard = () => (
+  <div className="glass rounded-xl overflow-hidden">
+    <div className="aspect-video skeleton" />
+    <div className="p-6 space-y-3">
+      <div className="h-4 w-20 skeleton" />
+      <div className="h-6 w-3/4 skeleton" />
+      <div className="h-4 w-full skeleton" />
+      <div className="h-4 w-2/3 skeleton" />
+    </div>
+  </div>
+);
+
 const Ventures = () => {
   const [ventures, setVentures] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const scrollRef = useScrollFadeIn();
 
   useEffect(() => {
-    supabase.from("projects").select("*").eq("category", "brand").order("display_order").then(({ data }) => {
-      setVentures(data ?? []);
-      setLoading(false);
-    });
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const { data, error } = await supabase.from("projects").select("*").eq("category", "brand").order("display_order");
+        if (error) throw error;
+        if (!cancelled) setVentures(data ?? []);
+      } catch (err) {
+        console.error("[v0] Failed to load ventures:", err);
+        if (!cancelled) setError("Unable to load ventures. Please try again.");
+      }
+      if (!cancelled) setLoading(false);
+    };
+    load();
+    return () => { cancelled = true; };
   }, []);
 
   return (
@@ -37,8 +60,18 @@ const Ventures = () => {
           <h1 className="text-4xl md:text-6xl font-display font-bold mb-4">Ventures</h1>
           <p className="text-muted-foreground max-w-lg mb-12">Independent brands & product lines built from the ground up.</p>
 
-          {loading ? (
-            <div className="text-center py-20 text-muted-foreground">Loading...</div>
+          {error ? (
+            <div className="glass rounded-xl p-8 max-w-md mx-auto text-center">
+              <h3 className="text-lg font-display font-bold mb-2">Connection Issue</h3>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <button onClick={() => window.location.reload()} className="btn-gradient px-5 py-2 text-sm text-primary-foreground">
+                Refresh
+              </button>
+            </div>
+          ) : loading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
+            </div>
           ) : ventures.length === 0 ? (
             <div className="text-center py-20">
               <Sparkles size={48} className="text-primary/30 mx-auto mb-4" />

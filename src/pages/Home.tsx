@@ -61,12 +61,14 @@ const Home = () => {
   const [recentUpdates, setRecentUpdates] = useState<Project[]>([]);
   const [counts, setCounts] = useState({ projects: 0, active: 0, ventures: 0, team: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const scrollRef = useScrollFadeIn();
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
+        setError(null);
         const [fp, pc, ac, vc, tc, recent] = await Promise.all([
           supabase.from("projects").select("*").eq("featured", true).order("created_at", { ascending: false }).limit(1),
           supabase.from("projects").select("id", { count: "exact", head: true }).neq("category", "brand"),
@@ -90,8 +92,9 @@ const Home = () => {
           ventures: vc.count ?? 0,
           team: tc.count ?? 0,
         });
-      } catch {
-        // Silently handle errors
+      } catch (err) {
+        console.error("[v0] Failed to load home data:", err);
+        if (!cancelled) setError("Unable to load content. Please try again.");
       }
       if (!cancelled) setLoading(false);
     };
@@ -106,24 +109,39 @@ const Home = () => {
     { value: counts.team, label: "Team Members", icon: Users },
   ], [counts]);
 
+  if (error) {
+    return (
+      <div className="page-transition min-h-[60vh] flex items-center justify-center">
+        <div className="glass rounded-xl p-8 max-w-md text-center">
+          <h2 className="text-xl font-display font-bold mb-2">Connection Issue</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <button onClick={() => window.location.reload()} className="btn-gradient px-6 py-2.5 text-sm text-primary-foreground">
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-transition" ref={scrollRef}>
       {/* Hero */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
-        <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/4 blur-[160px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] rounded-full bg-primary/3 blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[160px] pointer-events-none animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] rounded-full bg-primary/4 blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/2 right-1/3 w-[200px] h-[200px] rounded-full bg-primary/3 blur-[100px] pointer-events-none animate-float" />
 
         <div className="container mx-auto px-4">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-              <div className="red-dot" />
+              <div className="red-dot animate-pulse-glow" />
               <span className="text-sm text-muted-foreground font-medium tracking-wider uppercase">Digital Studio</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-display font-bold leading-[1.05] mb-6 opacity-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
               Engineering digital
               <br />
-              <span className="text-primary glow-red-text">experiences</span>
+              <span className="text-primary glow-red-text animate-glow-pulse">experiences</span>
             </h1>
 
             <div className="w-24 h-0.5 bg-gradient-to-r from-primary to-primary/40 mb-8 opacity-0 animate-fade-in rounded-full shadow-[0_0_12px_hsl(0_100%_36%/0.4)]" style={{ animationDelay: "0.3s" }} />
@@ -133,10 +151,10 @@ const Home = () => {
             </p>
 
             <div className="flex flex-wrap gap-4 opacity-0 animate-fade-in" style={{ animationDelay: "0.5s" }}>
-              <Link to="/studio-projects" className="btn-gradient px-7 py-3.5 text-primary-foreground">
-                Explore Projects <ArrowRight size={18} />
+              <Link to="/studio-projects" className="btn-gradient px-7 py-3.5 text-primary-foreground group">
+                Explore Projects <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link to="/ventures" className="inline-flex items-center gap-2 px-7 py-3.5 border border-border text-foreground font-semibold rounded-lg hover:bg-secondary hover:border-primary/20 transition-all duration-300">
+              <Link to="/ventures" className="inline-flex items-center gap-2 px-7 py-3.5 border border-border text-foreground font-semibold rounded-lg hover:bg-secondary hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
                 Enter Studio
               </Link>
             </div>

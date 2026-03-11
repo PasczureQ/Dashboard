@@ -8,6 +8,7 @@ import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
 import AdminLayout from "./components/AdminLayout";
 import MaintenanceGuard from "./components/MaintenanceGuard";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Lazy load pages for code splitting
 const Home = lazy(() => import("./pages/Home"));
@@ -31,20 +32,24 @@ const queryClient = new QueryClient();
 
 const PageLoader = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
-    <div className="red-dot animate-pulse-glow" />
+    <div className="flex flex-col items-center gap-4">
+      <div className="red-dot animate-pulse-glow" />
+      <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
+    </div>
   </div>
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <MaintenanceGuard>
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <MaintenanceGuard>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
                 {/* Public pages */}
                 <Route path="/" element={<Layout><Home /></Layout>} />
                 <Route path="/studio-projects" element={<Layout><StudioProjects /></Layout>} />
@@ -71,13 +76,14 @@ const App = () => (
                 </Route>
 
                 <Route path="*" element={<Layout><NotFound /></Layout>} />
-              </Routes>
-            </Suspense>
-          </MaintenanceGuard>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+                </Routes>
+              </Suspense>
+            </MaintenanceGuard>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

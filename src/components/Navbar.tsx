@@ -45,16 +45,16 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
-          ? "glass-strong border-b border-border shadow-lg shadow-background/50"
+          ? "glass-strong border-b border-border/50 shadow-lg shadow-background/50"
           : "bg-transparent border-b border-transparent"
       }`}
     >
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        <Link to="/" className="font-display text-xl font-bold tracking-tight group">
-          <span className="text-primary group-hover:glow-red-text transition-all duration-300">P</span>
-          <span className="text-foreground">aszczureQ</span>
+        <Link to="/" className="font-display text-xl font-bold tracking-tight group flex items-center gap-2">
+          <span className="text-primary group-hover:glow-red-text transition-all duration-300 group-hover:scale-110 inline-block">P</span>
+          <span className="text-foreground group-hover:text-foreground/90 transition-colors">aszczureQ</span>
         </Link>
 
         {/* Desktop */}
