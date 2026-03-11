@@ -46,7 +46,7 @@ const Connect = () => {
       setTouched({ name: false, email: false, message: false });
       setTimeout(() => setSent(false), 4000);
     } catch (err) {
-      console.error("[v0] Contact form error:", err);
+      console.error("Contact form error:", err);
       toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
     } finally {
       setSubmitting(false);

@@ -40,7 +40,7 @@ const Ventures = () => {
         if (error) throw error;
         if (!cancelled) setVentures(data ?? []);
       } catch (err) {
-        console.error("[v0] Failed to load ventures:", err);
+        console.error("Failed to load ventures:", err);
         if (!cancelled) setError("Unable to load ventures. Please try again.");
       }
       if (!cancelled) setLoading(false);

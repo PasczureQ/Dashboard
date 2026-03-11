@@ -93,8 +93,11 @@ const Home = () => {
           team: tc.count ?? 0,
         });
       } catch (err) {
-        console.error("[v0] Failed to load home data:", err);
-        if (!cancelled) setError("Unable to load content. Please try again.");
+        console.error("Failed to load home data:", err);
+        // Don't show error for empty database - show empty state instead
+        if (!cancelled) {
+          setCounts({ projects: 0, active: 0, ventures: 0, team: 0 });
+        }
       }
       if (!cancelled) setLoading(false);
     };
