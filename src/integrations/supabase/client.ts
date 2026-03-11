@@ -1,23 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Support both VITE_ prefixed vars (for local dev) and non-prefixed (Vercel integration)
-const SUPABASE_URL = 
-  import.meta.env.VITE_SUPABASE_URL || 
-  import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
-  import.meta.env.SUPABASE_URL ||
-  '';
-
-const SUPABASE_ANON_KEY = 
-  import.meta.env.VITE_SUPABASE_ANON_KEY || 
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 
-  import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  import.meta.env.SUPABASE_ANON_KEY ||
-  '';
-
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.warn('[Supabase] Missing environment variables. Database features may not work.');
-}
+// Get Supabase credentials from environment variables
+// Vite exposes env vars prefixed with VITE_ to the client
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
